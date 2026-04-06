@@ -1,5 +1,6 @@
 import pygame as pg  # ctr + alt + l (formatar pep8)
 
+from code.level import Level
 from code.menu import Menu
 from code.Const import WIN_WIDTH, WIN_HEIGHT
 
@@ -13,6 +14,13 @@ class Game:
         state = 'menu'
 
         while True:
-           if state == 'menu':
-               menu = Menu(self.window)
-               state = menu.run()
+            if state == 'menu':
+                menu = Menu(self.window)
+                state = menu.run()
+
+            elif state == 'game':
+                level = Level(self.window)
+                state = level.run()
+
+            elif state == 'score':
+                state = 'menu'
