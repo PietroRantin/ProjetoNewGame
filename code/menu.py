@@ -31,19 +31,68 @@ class Menu:
                 if event.type == pg.MOUSEBUTTONUP and event.button == 1:
                     clicked = True
 
+            result = None
+
             # Botões
-            self.draw_button("New Game", 20, (WIN_WIDTH / 2, 200), self.start_game, clicked)
-            self.draw_button("Score", 20, (WIN_WIDTH / 2, 250), self.show_score, clicked)
+            result= result or self.draw_button("New Game", 20, (WIN_WIDTH / 2, 200), self.start_game, clicked)
+            result= result or self.draw_button("Score", 20, (WIN_WIDTH / 2, 250), self.show_score, clicked)
+
+            if result:
+                return result
 
             pg.display.flip()
 
-
     def start_game(self):
-        print('Iniciando o jogo...')
+        return 'game'
         # Troca de telas depois
 
     def show_score(self):
-        print('Mostrando os scores...')
+        return 'score'
+
+    def draw_button(self, text, size, center_pos, action=None, clicked=False):
+        mouse_pos = pg.mouse.get_pos()
+
+        # Render do Texto com borda (usa funcao ja otimizada)
+        text_surf = self.render_text_with_outline(
+            text=text,
+            size=size,
+            text_color=COLOR_WHITE,
+            outline_color=(0, 0, 0),
+            outline_width=3
+        )
+
+        text_rect = text_surf.get_rect(center=center_pos)
+
+        # Area do Botao (padding :/)
+        padding_x, padding_y = 20, 10
+        button_rect = pg.Rect(
+            text_rect.left - padding_x,
+            text_rect.top - padding_y,
+            text_rect.width + padding_x * 2,
+            text_rect.height + padding_y * 2
+        )
+
+        result = None
+
+        # Hover effect
+        if button_rect.collidepoint(mouse_pos):
+            collor = COLOR_WHITE
+            border = (250, 250, 250)
+
+            # clique
+            if clicked and action:
+                result = action()
+        else:
+            collor = (200, 200, 200)
+            border = (0, 0, 0)
+
+        # Fundo do Botão (teste 1-bit)
+        pg.draw.rect(self.window, border, button_rect, 2)
+
+        # Texto
+        self.window.blit(text_surf, text_rect)
+
+        return result
 
     def get_font(self, size):
         if size not in self.font:
@@ -92,48 +141,3 @@ class Menu:
 
         rect = text_surface.get_rect(center=text_center_pos)
         self.window.blit(text_surface, rect)
-
-    def draw_button(self, text, size, center_pos, action=None, clicked=False):
-        mouse_pos = pg.mouse.get_pos()
-
-        # Render do Texto com borda (usa funcao ja otimizada)
-        text_surf = self.render_text_with_outline(
-            text=text,
-            size=size,
-            text_color=COLOR_WHITE,
-            outline_color=(0, 0, 0),
-            outline_width=3
-        )
-
-        text_rect = text_surf.get_rect(center=center_pos)
-
-        # Area do Botao (padding :/)
-        padding_x, padding_y = 20, 10
-        button_rect = pg.Rect(
-            text_rect.left - padding_x,
-            text_rect.top - padding_y,
-            text_rect.width + padding_x * 2,
-            text_rect.height + padding_y * 2
-        )
-
-        # Hover effect
-        if button_rect.collidepoint(mouse_pos):
-            collor = COLOR_WHITE
-            border = (250,250,250)
-
-            # clique
-            if clicked and action:
-                action()
-        else:
-            collor = (200, 200, 200)
-            border = (0,0,0)
-
-        # Fundo do Botão (teste 1-bit)
-        pg.draw.rect(self.window, border, button_rect, 2)
-
-        # Texto
-        self.window.blit(text_surf, text_rect)
-
-
-
-
