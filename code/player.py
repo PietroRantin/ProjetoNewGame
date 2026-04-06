@@ -9,8 +9,8 @@ class Player:
         self.window = window
 
         # Posição e tamanho
-        self.width = 30
-        self.height = 38
+        self.width = 28
+        self.height = 32
         self.x = 100
         self.y = WIN_HEIGHT - 100  # Começando proximo ao chão
 
