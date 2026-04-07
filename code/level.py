@@ -1,6 +1,7 @@
 import pygame as pg
 from code.Const import WIN_WIDTH, WIN_HEIGHT, COLOR_WHITE
 from code.player import Player
+from code.background import Background
 
 
 class Level:
@@ -11,13 +12,18 @@ class Level:
         # Altura do chão
         self.ground_y = WIN_HEIGHT - 20
 
+        # Camadas de background com velocidades diferentes (parallax)
+        # substitui os caminhos pelas suas imagens reais
+        self.backgrounds = [
+            Background(self.window, './asset/bg_far1.png', 0.3),  # lua/estrelas - lenta
+            Background(self.window, './asset/bg_far3.png', 0.8, True),  # nuvens - média
+            Background(self.window, './asset/bg_close1.png', 2.0, True),  # primeiro plano - rápida
+        ]
+
         self.player = Player(self.window)
 
     def run(self):
         while True:
-            # Limpa a tela com cor preta
-            self.window.fill((0, 0, 0))
-
             # Eventos
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -29,10 +35,15 @@ class Level:
                     if event.key == pg.K_SPACE:
                         self.player.jump()
 
-            # Atualiza e desenha o chão
+            # Ordem do desenho: fundo - chão - player
+            for bg in self.backgrounds:
+                bg.update()
+                bg.draw()
+
+            # Chão
             pg.draw.rect(self.window, COLOR_WHITE, (0, self.ground_y, WIN_WIDTH, 20))
 
-            # Atualiza e desenha o player
+            # Player
             self.player.update(self.ground_y)
             self.player.draw()
 
