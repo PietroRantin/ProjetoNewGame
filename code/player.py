@@ -1,89 +1,107 @@
-from idlelib import window
-
 import pygame as pg
 from code.Const import WIN_HEIGHT, COLOR_WHITE
+
+# Constantes de tuning — fácil de ajustar
+COYOTE_FRAMES = 6    # frames de graça após sair da plataforma
+JUMP_BUFFER_FRAMES = 8  # frames que o jogo "lembra" do botão de pulo
+GROUND_TOLERANCE = 4    # pixels de margem na detecção de chão
 
 
 class Player:
     def __init__(self, window):
         self.window = window
-
-        # Posição e tamanho
         self.width = 28
-        self.height = 32
+        self.height = 30
         self.x = 100
-        self.y = WIN_HEIGHT - 100  # Começando proximo ao chão
+        self.y = WIN_HEIGHT - 100
 
-        # Física
         self.vel_y = 0
-        self.gravity = 0.6
-        self.jump_force = -13
+        self.gravity = 0.7
+        self.jump_force = -14
         self.on_ground = False
-
-        # Velocidade Horizontal
         self.vel_x = 0
+
+        # Contadores para coyote time e jump buffer
+        self.coyote_timer = 0
+        self.jump_buffer_timer = 0
 
     def handle_input(self):
         keys = pg.key.get_pressed()
-
-        # Move Horizontal
         if keys[pg.K_LEFT] or keys[pg.K_a]:
-            self.vel_x = -5
+            self.vel_x = -4
         elif keys[pg.K_RIGHT] or keys[pg.K_d]:
-            self.vel_x = 5
+            self.vel_x = 4
         else:
             self.vel_x = 0
 
-    def jump(self):
-        if self.on_ground:  # Só pula se estiver no chão
+    def request_jump(self):
+        # Chamado pelo KEYDOWN — registra a intenção de pular
+        self.jump_buffer_timer = JUMP_BUFFER_FRAMES
+
+    def try_jump(self):
+        # Executa o pulo se há intenção E condição (chão ou coyote time)
+        can_jump = self.on_ground or self.coyote_timer > 0
+        wants_jump = self.jump_buffer_timer > 0
+
+        if can_jump and wants_jump:
             self.vel_y = self.jump_force
             self.on_ground = False
+            self.coyote_timer = 0      # consome o coyote time
+            self.jump_buffer_timer = 0  # consome o buffer
 
     def apply_gravity(self):
         self.vel_y += self.gravity
-
-        # Limite (evita atravessar plataformas em alta velocidade)
         if self.vel_y > 15:
             self.vel_y = 15
 
     def check_platform_collision(self, platforms):
+        was_on_ground = self.on_ground
         self.on_ground = False
         player_rect = self.get_rect()
 
         for plat in platforms:
             if player_rect.colliderect(plat.rect):
-                # Só pousa se estiver caindo E vindo de cima
-                if self.vel_y > 0 and player_rect.bottom - self.vel_y <= plat.rect.top + 5:
+                if self.vel_y >= 0 and player_rect.bottom - self.vel_y <= plat.rect.top + GROUND_TOLERANCE:
                     self.y = plat.rect.top - self.height
                     self.vel_y = 0
                     self.on_ground = True
-                    break  # colisão resolvida, não precisa checar o resto
+                    break
 
-    def update(self, ground_y, platforms = None):
+        # Coyote time: estava no chão, agora não está mais → inicia contagem
+        if was_on_ground and not self.on_ground:
+            self.coyote_timer = COYOTE_FRAMES
+
+    def update_timers(self):
+        # Decrementa os timers a cada frame (nunca abaixo de zero)
+        if self.coyote_timer > 0:
+            self.coyote_timer -= 1
+        if self.jump_buffer_timer > 0:
+            self.jump_buffer_timer -= 1
+
+    def update(self, ground_y, platforms=None):
         self.handle_input()
         self.apply_gravity()
 
-        # Aplica movimento
         self.x += self.vel_x
         self.y += self.vel_y
 
-        # Colisão com plataformas
         if platforms:
             self.check_platform_collision(platforms)
 
-        # Colisão com o chão
+        # Chão principal
         if self.y >= ground_y - self.height:
             self.y = ground_y - self.height
             self.vel_y = 0
             self.on_ground = True
 
+        # Tenta executar pulo (depois de atualizar on_ground)
+        self.try_jump()
+
+        # Atualiza contadores
+        self.update_timers()
+
     def draw(self):
-        # Retângulo colorido (substituir por sprite depois)
-        pg.draw.rect(
-            self.window,
-            COLOR_WHITE,
-            (self.x, self.y, self.width, self.height)
-        )
+        pg.draw.rect(self.window, COLOR_WHITE, (self.x, self.y, self.width, self.height))
 
     def get_rect(self):
         return pg.Rect(self.x, self.y, self.width, self.height)

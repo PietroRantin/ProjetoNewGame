@@ -36,7 +36,7 @@ class Level:
                     if event.key == pg.K_ESCAPE:
                         return 'menu'
                     if event.key == pg.K_SPACE:
-                        self.player.jump()
+                        self.player.request_jump()
 
             # Ordem do desenho: fundo - chão - player
             for bg in self.backgrounds:
