@@ -46,7 +46,20 @@ class Player:
         if self.vel_y > 15:
             self.vel_y = 15
 
-    def update(self, ground_y):
+    def check_platform_collision(self, platforms):
+        self.on_ground = False
+        player_rect = self.get_rect()
+
+        for plat in platforms:
+            if player_rect.colliderect(plat.rect):
+                # Só pousa se estiver caindo E vindo de cima
+                if self.vel_y > 0 and player_rect.bottom - self.vel_y <= plat.rect.top + 5:
+                    self.y = plat.rect.top - self.height
+                    self.vel_y = 0
+                    self.on_ground = True
+                    break  # colisão resolvida, não precisa checar o resto
+
+    def update(self, ground_y, platforms = None):
         self.handle_input()
         self.apply_gravity()
 
@@ -54,13 +67,15 @@ class Player:
         self.x += self.vel_x
         self.y += self.vel_y
 
+        # Colisão com plataformas
+        if platforms:
+            self.check_platform_collision(platforms)
+
         # Colisão com o chão
         if self.y >= ground_y - self.height:
             self.y = ground_y - self.height
             self.vel_y = 0
             self.on_ground = True
-        else:
-            self.on_ground = False
 
     def draw(self):
         # Retângulo colorido (substituir por sprite depois)
