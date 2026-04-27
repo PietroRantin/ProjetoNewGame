@@ -25,6 +25,26 @@ class Level:
         self.platform_manager = PlataformManager(self.scroll_speed)
         self.player = Player(self.window)
 
+    def check_death(self):
+        if self.player.is_fallen():
+            self.player.take_damege()
+
+            if not self.player.alive:
+                return 'game over'
+
+            self.player.x = 100
+            self.player.y = WIN_HEIGHT - 100
+            self.player.vel_y = 0
+
+        return None
+
+    def draw_hud(self):
+        # HUD simples: vidas no canto superior esquerdo
+        font = pg.font.SysFont('Lucida Sans Typewriter', 18)
+        lives_text = font.render(f'Vidas: {self.player.lives}', True, COLOR_WHITE)
+        self.window.blit(lives_text, (10, 10))
+
+
     def run(self):
         while True:
             # Eventos
@@ -54,5 +74,12 @@ class Level:
             self.player.update(self.ground_y, self.platform_manager.get_platforms())
             self.player.draw()
 
+            # Checa morte depois de atualizar o player
+            result = self.check_death()
+            if result:
+                return result  # → 'gameover'
+
+            self.draw_hud()
+
             pg.display.flip()
-            self.clock.tick(60)  # limita a 60 FPS
+            self.clock.tick(60)

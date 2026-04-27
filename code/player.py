@@ -5,6 +5,7 @@ from code.Const import WIN_HEIGHT, COLOR_WHITE
 COYOTE_FRAMES = 6    # frames de graça após sair da plataforma
 JUMP_BUFFER_FRAMES = 8  # frames que o jogo "lembra" do botão de pulo
 GROUND_TOLERANCE = 4    # pixels de margem na detecção de chão
+INVINCIBLE_FRAMES = 90
 
 
 class Player:
@@ -24,6 +25,24 @@ class Player:
         # Contadores para coyote time e jump buffer
         self.coyote_timer = 0
         self.jump_buffer_timer = 0
+
+        # Sistema de vidas
+        self.lives = 3
+        self.invincible_timer = 0
+        self.alive = True
+
+    def take_damege(self):
+        if self.invincible_timer > 0:
+            return
+
+        self.lives -= 1
+        self.invincible_timer = INVINCIBLE_FRAMES
+
+        if self.lives <= 0:
+            self.alive = False
+
+    def is_fallen(self):
+        return self.y > WIN_HEIGHT + 50
 
     def handle_input(self):
         keys = pg.key.get_pressed()
