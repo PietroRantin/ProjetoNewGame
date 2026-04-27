@@ -9,12 +9,17 @@ INVINCIBLE_FRAMES = 90
 
 
 class Player:
-    def __init__(self, window):
+    def __init__(self, window, start_y = None):
         self.window = window
         self.width = 28
         self.height = 30
         self.x = 100
-        self.y = WIN_HEIGHT - 100
+
+        if start_y is not None:
+            self.y = start_y - self.height
+        else:
+            self.y = WIN_HEIGHT - 150
+
 
         self.vel_y = 0
         self.gravity = 0.7
@@ -31,7 +36,7 @@ class Player:
         self.invincible_timer = 0
         self.alive = True
 
-    def take_damege(self):
+    def take_damage(self):
         if self.invincible_timer > 0:
             return
 
@@ -97,7 +102,7 @@ class Player:
         if self.jump_buffer_timer > 0:
             self.jump_buffer_timer -= 1
 
-    def update(self, ground_y, platforms=None):
+    def update(self, platforms=None):
         self.handle_input()
         self.apply_gravity()
 
@@ -106,12 +111,6 @@ class Player:
 
         if platforms:
             self.check_platform_collision(platforms)
-
-        # Chão principal
-        if self.y >= ground_y - self.height:
-            self.y = ground_y - self.height
-            self.vel_y = 0
-            self.on_ground = True
 
         # Tenta executar pulo (depois de atualizar on_ground)
         self.try_jump()
