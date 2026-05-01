@@ -108,6 +108,9 @@ class Player:
             self.coyote_timer -= 1
         if self.jump_buffer_timer > 0:
             self.jump_buffer_timer -= 1
+        if self.invincible_timer > 0:
+            self.invincible_timer -= 1
+            print(f'invincible_timer: {self.invincible_timer}')  # ← temporário
 
     def update(self, platforms=None):
         self.handle_input()
@@ -130,3 +133,8 @@ class Player:
 
     def get_rect(self):
         return pg.Rect(self.x, self.y, self.width, self.height)
+
+    def kill_enemy_bounce(self):
+        # Pequeno quique ao pisar no inimigo
+        self.vel_y = -8
+        self.on_ground = False
