@@ -36,6 +36,13 @@ class Player:
         self.invincible_timer = 0
         self.alive = True
 
+    def respawn(self, x, y):
+        self.x = x
+        self.y = y
+        self.vel_y = 0
+        self.vel_x = 0
+        self.invincible_timer = 0  # ← reseta invencibilidade ao reaparecer
+
     def take_damage(self):
         if self.invincible_timer > 0:
             return

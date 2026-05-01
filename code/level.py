@@ -21,13 +21,42 @@ class Level:
         # Spawn platform ANTES do player
         spawn_y = WIN_HEIGHT - 80
         self.spawn_platform = Platform(0, spawn_y, WIN_WIDTH // 2, scroll_speed=0)
+        self.spawn_timer = 180 # 3 segundos a 60fps
 
         # Player criado UMA vez, posicionado em cima da spawn
         self.player = Player(self.window, start_y=self.spawn_platform.rect.top)
 
     def get_all_platforms(self):
-        # Junta spawn + plataformas procedurais em uma lista só
-        return [self.spawn_platform] + self.platform_manager.get_platforms()
+        platforms = self.platform_manager.get_platforms()
+        # Só inclui a spawn platform se ainda estiver ativa
+        if self.spawn_timer > 0:
+            platforms = [self.spawn_platform] + platforms
+        return platforms
+
+    def update_spawn_platform(self):
+        if self.spawn_timer > 0:
+            self.spawn_timer -= 1
+
+    def draw_spawn_platform(self):
+        if self.spawn_timer > 0:
+            # Pisca nos últimos 60 frames (1 segundo) para avisar que vai sumir
+            if self.spawn_timer > 60 or (self.spawn_timer // 6) % 2 == 0:
+                self.spawn_platform.draw(self.window)
+
+    def get_respawn_platform(self):
+        platforms = self.platform_manager.get_platforms()
+
+        if not platforms:
+            return None
+
+        # Pega a plataforma mais à esquerda que ainda está visível na tela
+        visible = [p for p in platforms if p.x + p.width > 0 and p.x < WIN_WIDTH]
+
+        if not visible:
+            return visible[0] if platforms else None
+
+        # Prefere a plataforma mais à esquerda (mais próxima do player)
+        return min(visible, key=lambda p: p.x)
 
     def check_death(self):
         if self.player.is_fallen():
@@ -36,14 +65,26 @@ class Level:
             if not self.player.alive:
                 return 'gameover'
 
-            # Reposiciona em cima da spawn platform
-            self.player.x = 100
-            self.player.y = self.spawn_platform.rect.top - self.player.height
-            self.player.vel_y = 0
-
-            print(f'spawn_platform rect: {self.spawn_platform.rect}')
-            print(f'player y inicial: {self.player.y}')
-            print(f'WIN_HEIGHT: {WIN_HEIGHT}')
+            # Tenta reaparecer na spawn (se ainda ativa) ou na plataforma mais próxima
+            if self.spawn_timer > 0:
+                self.player.respawn(
+                    x=100,
+                    y=self.spawn_platform.rect.top - self.player.height
+                )
+            else:
+                plat = self.get_respawn_platform()
+                if plat:
+                    self.player.respawn(
+                        x=plat.x + 20,
+                        y=plat.rect.top - self.player.height
+                    )
+                else:
+                    # Nenhuma plataforma visível — reaparecer no topo da tela
+                    # e deixar o jogador cair naturalmente sobre o que vier
+                    self.player.respawn(
+                        x=100,
+                        y=50
+                    )
 
         return None
 
@@ -69,7 +110,8 @@ class Level:
                 bg.draw()
 
             # Spawn platform (não chama update — ela não se move)
-            self.spawn_platform.draw(self.window)
+            self.update_spawn_platform()
+            self.draw_spawn_platform()
 
             self.platform_manager.update()
             self.platform_manager.draw(self.window)
