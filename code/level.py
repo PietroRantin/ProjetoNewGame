@@ -1,9 +1,10 @@
 import pygame as pg
-from code.Const import WIN_WIDTH, WIN_HEIGHT, COLOR_WHITE
 from code.player import Player
 from code.background import Background
 from code.platform import Platform, PlataformManager
 from code.enemy import EnemyManager
+from code.Const import WIN_WIDTH, WIN_HEIGHT, COLOR_WHITE, SCORE_TO_WIN
+from code.score_manager import save_score
 
 
 class Level:
@@ -111,7 +112,7 @@ class Level:
                     quit()
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_ESCAPE:
-                        return 'menu'
+                        return 'menu', self.score
                     if event.key == pg.K_SPACE:
                         self.player.request_jump()
 
@@ -135,14 +136,18 @@ class Level:
             # Checa colisões nesta ordem — inimigo antes de morte
             result = self.check_enemy_collision()  # ← captura
             if result:
-                return result
+                return result, self.score
 
             result = self.check_death()
             if result:
-                return result
+                return result, self.score
 
             # Pontuação por sobrevivência
             self.score += 1
+
+            if self.score >= SCORE_TO_WIN:
+                save_score(self.score)
+                return 'victory', self.score
 
             self.draw_hud()
 
