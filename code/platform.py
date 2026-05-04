@@ -2,9 +2,30 @@ import pygame as pg
 import random
 from code.Const import WIN_WIDTH, WIN_HEIGHT, COLOR_WHITE
 
+# Carrega os sprites uma única vez (fora da classe, evita recarregar a cada plataforma)
+def _load_plat_sprites():
+    def load(path, h):
+        img = pg.image.load(path).convert_alpha()
+        # Mantém proporção: redimensiona altura para 16, largura proporcional
+        w = img.get_width()
+        orig_h = img.get_height()
+        new_w = int(w * h / orig_h)
+        return pg.transform.scale(img, (new_w, h))
+
+    return {
+        'left':  load('./asset/PLAT_1.png', 20),
+        'mid':   load('./asset/PLAT_2.png', 20),
+        'right': load('./asset/PLAT_3.png', 20),
+    }
+
+PLAT_SPRITES = None  # inicializado na primeira plataforma criada
 
 class Platform:
     def __init__(self, x, y, width, scroll_speed):
+        global PLAT_SPRITES
+        if PLAT_SPRITES is None:
+            PLAT_SPRITES = _load_plat_sprites()
+
         self.width = width
         self.height = 16  # plataforma
         self.x = x
@@ -17,7 +38,27 @@ class Platform:
         self.rect.x = self.x  # atualiza o rect
 
     def draw(self, window):
-        pg.draw.rect(window, COLOR_WHITE, self.rect)
+        left = PLAT_SPRITES['left']
+        mid = PLAT_SPRITES['mid']
+        right = PLAT_SPRITES['right']
+
+        lw = left.get_width()
+        rw = right.get_width()
+        mw = mid.get_width()
+
+        # Desenha borda esquerda
+        window.blit(left, (self.x, self.y))
+
+        # Preenche o meio com repetições do tile central
+        fill_start = self.x + lw
+        fill_end = self.x + self.width - rw
+        cx = fill_start
+        while cx < fill_end:
+            window.blit(mid, (cx, self.y))
+            cx += mw
+
+        # Desenha borda direita
+        window.blit(right, (self.x + self.width - rw, self.y))
 
     def off_screen(self):
         return self.x + self.width < 0 # saiu pela esquerda

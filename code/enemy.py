@@ -12,20 +12,19 @@ class Enemy:
         self.scroll_speed = scroll_speed
         self.rect = pg.Rect(self.x, self.y, self.width, self.height)
 
+        # Carrega e redimensiona o sprite
+        self.sprite = self._load_sprite()
+
+    def _load_sprite(self):
+        img = pg.image.load('./asset/inimigo.png').convert_alpha()
+        return pg.transform.scale(img, (self.width, self.height))
+
     def update(self):
         self.x -= self.scroll_speed
         self.rect.x = self.x
 
     def draw(self, window):
-        # Placeholder visual — substitui por sprite depois
-        pg.draw.rect(window, (200, 50, 50), self.rect)
-        # X no centro para identificar como inimigo
-        pg.draw.line(window, COLOR_WHITE,
-                     (self.rect.left + 4, self.rect.top + 4),
-                     (self.rect.right - 4, self.rect.bottom - 4), 2)
-        pg.draw.line(window, COLOR_WHITE,
-                     (self.rect.right - 4, self.rect.top + 4),
-                     (self.rect.left + 4, self.rect.bottom - 4), 2)
+        window.blit(self.sprite, (self.x, self.y))
 
     def off_screen(self):
         return self.x + self.width < 0
