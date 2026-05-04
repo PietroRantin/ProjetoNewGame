@@ -1,5 +1,5 @@
 import pygame as pg
-from code.Const import WIN_WIDTH, COLOR_TITLE, COLOR_WHITE
+from code.Const import WIN_WIDTH, COLOR_TITLE, COLOR_WHITE, WIN_HEIGHT
 
 
 class Menu:
@@ -37,10 +37,40 @@ class Menu:
             result= result or self.draw_button("New Game", 20, (WIN_WIDTH / 2, 200), self.start_game, clicked)
             result= result or self.draw_button("Score", 20, (WIN_WIDTH / 2, 250), self.show_score, clicked)
 
+            self.draw_controls()
+
             if result:
                 return result
 
             pg.display.flip()
+
+    def draw_controls(self):
+        controls = [
+            'CONTROLES:',
+            'A D / SETAS  →  Mover',
+            'SPACE        →  Pular',
+            'ESC          →  Menu',
+        ]
+
+        # Ponto de ancoragem: canto inferior esquerdo
+        x = 15
+        start_y = WIN_HEIGHT - (len(controls) * 24) - 15
+
+        for i, line in enumerate(controls):
+            # Título em branco, resto em cinza claro
+            color = COLOR_WHITE if i == 0 else (180, 180, 180)
+            size = 14 if i == 0 else 12
+
+            text_surf = self.render_text_with_outline(
+                text=line,
+                size=size,
+                text_color=color,
+                outline_color=(0, 0, 0),
+                outline_width=2  # borda mais grossa para destacar
+            )
+
+            # Alinha pela esquerda em vez de centralizar
+            self.window.blit(text_surf, (x, start_y + i * 24))
 
     def start_game(self):
         return 'game'
